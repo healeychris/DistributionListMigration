@@ -34,7 +34,7 @@
 		Name of group to recreate.
 
 	.PARAMETER CreatePlaceHolder
-		Create placeholder group.
+		Create placeholder group..
 
 	.PARAMETER Finalize
 		Convert placeholder group to final group.
@@ -525,3 +525,4 @@ Else {
     Write-Host "  ERROR: No options selected, please use '-CreatePlaceHolder' or '-Finalize' or '-Contact'" -ForegroundColor Red
     Write-Host
 }
+
