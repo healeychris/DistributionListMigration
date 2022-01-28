@@ -34,7 +34,7 @@
 		Name of group to recreate.
 
 	.PARAMETER CreatePlaceHolder
-		Create placeholder group.
+		Create placeholder group..
 
 	.PARAMETER Finalize
 		Convert placeholder group to final group.
