@@ -5,9 +5,9 @@
     Created on:   	28/01/2022
     Created by:   	Chris Healey
     Organization: 	
-    Filename:       MainController.ps1
+    Filename:       Recreate-DistributionGroup.ps1
     Project path:   https://github.com/healeychris/DistributionListMigration
-    Org Author:     Joe Palarchio (based on Version:     1.0) 
+    Org Author:     Joe Palarchio (based on Version: 1.0) 
     ===========================================================================
     .DESCRIPTION
     Copies attributes of a synchronized group to a placeholder group and CSV file.  After 
@@ -442,7 +442,7 @@ ElseIf ($Contact.IsPresent) {
 
 
     # check if the script is running on premise else stop
-    if ($Groupdata.DistinguishedName -match "DC=core,DC=bbc,DC=co,DC=uk"){}
+    if ($Groupdata.DistinguishedName -Notmatch "DC=PROD,DC=OUTLOOK,DC=COM"){}
     Else {WriteTransactionsLogs -Task "Script looks to be running against cloud objects, QUITTING" -Result ERROR -ErrorMessage "Wrong Platform" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
         exit
     }
