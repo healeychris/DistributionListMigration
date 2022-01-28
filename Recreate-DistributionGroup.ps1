@@ -8,6 +8,7 @@
     Filename:       Recreate-DistributionGroup.ps1
     Project path:   https://github.com/healeychris/DistributionListMigration
     Org Author:     Joe Palarchio (based on Version: 1.0) 
+    Org site:       https://blogs.perficient.com/2016/05/18/office-365-script-to-move-mail-distribution-groups-to-the-cloud/
     ===========================================================================
     .DESCRIPTION
     Copies attributes of a synchronized group to a placeholder group and CSV file.  After 
@@ -117,7 +118,7 @@ function WriteTransactionsLogs {
  
  
         # Check of log files exist for this session
-        If ($Global:TransactionLog -eq $null) {$Global:TransactionLog = ".\TransactionLog_$((get-date).ToString('yyyyMMdd_HHmm')).csv"}
+        If ($null -eq $Global:TransactionLog) {$Global:TransactionLog = ".\TransactionLog_$((get-date).ToString('yyyyMMdd_HHmm')).csv"}
  
         
         # Create Directory Structure
