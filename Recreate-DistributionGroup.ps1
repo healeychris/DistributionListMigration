@@ -486,6 +486,7 @@ ElseIf ($Contact.IsPresent) {
         -EmailAddresses @{Remove=$TargetOnMicrosoft,$CurrentSMTP} `
         -BypassSecurityGroupManagerCheck `
         -DomainController $DCServer -EA STOP
+        Set-ADObject -Identity $groupData.DistinguishedName -add @{AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
         WriteTransactionsLogs -Task "Removed Addresses: $TargetOnMicrosoft,$CurrentSMTP" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
     }
     Catch {WriteTransactionsLogs -Task "Failed Removing Addresses: $TargetOnMicrosoft,$CurrentSMTP from $Group" -Result ERROR -ErrorMessage "Failed removing Addresses" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true}
@@ -508,7 +509,7 @@ ElseIf ($Contact.IsPresent) {
         Start-Sleep 1
         Set-MailContact -identity $NewContact.DistinguishedName -HiddenFromAddressListsEnabled:$true -CustomAttribute5 'DO-NOT-SYNC' -DomainController $DCServer -EA STOP
         Set-Contact -identity $NewContact.DistinguishedName -Notes "This contact is used to support the $CurrentName group located in 365. " -DomainController $DCServer -EA STOP
-        Set-ADObject -Identity $NewContact.DistinguishedName -add @{Notes="This contact is used to support the $CurrentName group located in 365."; Description="This contact is used to support the $CurrentName group located in 365."} -Server $DCServer -EA STOP
+        Set-ADObject -Identity $NewContact.DistinguishedName -add @{Notes="This contact is used to support the $CurrentName group located in 365."; Description="This contact is used to support the $CurrentName group located in 365."; AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
         writeTransactionsLogs -Task "Completed Mail Contact object for $Group" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false}
         Catch {writeTransactionsLogs -Task "Failed Setting additional Mail Contact object Information" -Result ERROR -ErrorMessage "Failed updating object" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
     }
