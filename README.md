@@ -1,4 +1,3 @@
-<#	
     .NOTES
     ===========================================================================
     Created with: 	VS
@@ -29,7 +28,7 @@
 
     Run to Finalize the cloud group and cut over the original name
     .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize
-#>
+
 
 <#
 	.PARAMETER Group
