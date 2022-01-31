@@ -74,6 +74,7 @@ $DCServer                   =       'BGB01DC1180'               # DC ServerName
 $ExportDirectory            =       ".\ExportedAddresses\"
 $FullGroupExportDirectory   =       ".\FullGroupExport\"
 $FailedGroups               =       ".\FailedGroups\"
+$DefaultManagedBy           =       "MTS-HybridAdmin"
 Clear-Host
 
 
@@ -255,6 +256,14 @@ If ($CreatePlaceHolder.IsPresent) {
         "EmailAddress" > "$ExportDirectory\$Group.csv"
         $OldDG.EmailAddresses >> "$ExportDirectory\$Group.csv"
         "x500:"+$OldDG.LegacyExchangeDN >> "$ExportDirectory\$Group.csv"
+
+        # Check the status of ManagedBy is valid
+        if (([string]::IsNullOrEmpty($oldDG.ManagedBy)) -or ('Organization management' -eq $OldDG.ManagedBy)){
+
+            WriteTransactionsLogs -Task "ManagedBy is missing or'Organization management', using $DefaultManagedBy" -Result Information -ErrorMessage "none" -ShowScreenMessage true -ScreenMessageColour YELLOW -IncludeSysError false
+            $oldDG | Add-Member -MemberType NoteProperty -Name "ManagedBy" -Value $DefaultManagedBy -Force
+        }
+
        
       
         Try {
