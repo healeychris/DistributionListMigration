@@ -230,7 +230,7 @@ If ($CreatePlaceHolder.IsPresent) {
     Write-Host
      
 
-    If (((Get-DistributionGroup $Group -DomainController $DCServer -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
+    If (((Get-DistributionGroup $Group -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
 
         
         
@@ -487,7 +487,7 @@ ElseIf ($Contact.IsPresent) {
         -Alias $NewAlias `
         -DisplayName $NewDisplayName `
         -PrimarySmtpAddress $NewSMTP `
-        -HiddenFromAddressListsEnabled $False `
+        -HiddenFromAddressListsEnabled:$true `
         -EmailAddressPolicyEnabled $False `
         -CustomAttribute5  'Do-not-sync'`
         -BypassSecurityGroupManagerCheck `
@@ -501,7 +501,7 @@ ElseIf ($Contact.IsPresent) {
 
     try {
         # Apply undocumented marker to exclude from ADConnect Sync
-        Set-ADObject -Identity $groupData.DistinguishedName -add @{AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
+        #Set-ADObject -Identity $groupData.DistinguishedName -add @{AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
 
         Set-DistributionGroup `
         -Name $NewName `
@@ -513,6 +513,7 @@ ElseIf ($Contact.IsPresent) {
         WriteTransactionsLogs -Task "Removed Addresses : $TargetOnMicrosoft,$CurrentSMTP" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
     }
     Catch {WriteTransactionsLogs -Task "Failed Removing Addresses : $TargetOnMicrosoft,$CurrentSMTP from $Group" -Result ERROR -ErrorMessage "Failed removing Addresses " -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
+    exit
     RecordFailed
     }
 
@@ -525,7 +526,7 @@ ElseIf ($Contact.IsPresent) {
         writeTransactionsLogs -Task "Creating New contact based on Group details" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
         $NewContact = New-MailContact -Name  $CurrentName -OrganizationalUnit $ContactGroupOU -DisplayName  $CurrentDisplayname -PrimarySmtpAddress $CurrentSMTP -ExternalEmailAddress $TargetOnMicrosoft -Alias $CurrentAlias -DomainController $DCServer -EA STOP
         }
-    Catch {writeTransactionsLogs -Task "Failed to create mail contact object" -Result Information -ErrorMessage "Failed creating contact" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
+    Catch {writeTransactionsLogs -Task "Failed to create mail contact object" -Result ERROR -ErrorMessage "Failed creating contact" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
     RecordFailed    
     Exit
     }
