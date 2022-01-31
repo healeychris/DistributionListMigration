@@ -1,4 +1,4 @@
-# DistributionListMigration
+<#	
     .NOTES
     ===========================================================================
     Created with: 	VS
@@ -21,7 +21,30 @@
     Once the contents of the new group are validated, the on-premises group can be deleted.
     .NOTES
 
-RUN ORDER - :
+    Run Order - In 365 to create duplicate group of synced group
+    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder
+
+    Run on prem to remove the objects from sync and create contact objects. (not synced to 365)
+    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact
+
+    Run to Finalize the cloud group and cut over the original name
+    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize
+#>
+
+<#
+	.PARAMETER Group
+		Name of group to recreate.
+
+	.PARAMETER CreatePlaceHolder
+		Create placeholder group.
+
+	.PARAMETER Finalize
+		Convert placeholder group to final group.
+
+    .PARAMETER Contact
+		Create a Contact based on Group for Onpremise emailing.
+
+        RUN ORDER - :
     	.EXAMPLE #1
         	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder       # In Exchange Online
 
@@ -30,3 +53,5 @@ RUN ORDER - :
         	
         .EXAMPLE #3
             .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize                # In Exchange Online
+
+#>
