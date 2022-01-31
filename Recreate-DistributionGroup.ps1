@@ -5,7 +5,7 @@
     Created on:   	28/01/2022
     Created by:   	Chris Healey
     Organization: 
-    Version:        0.2	
+    Version:        1.1	
     Filename:       Recreate-DistributionGroup.ps1
     Project path:   https://github.com/healeychris/DistributionListMigration
     Org Author:     Joe Palarchio (based on Version: 1.0) 
