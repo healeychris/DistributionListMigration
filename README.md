@@ -47,10 +47,10 @@
 		Create a Contact based on Group for Onpremise emailing.
 
         RUN ORDER - :
-    	.EXAMPLE #1
+	.EXAMPLE #1
         	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder       # In Exchange Online
 
-    	.EXAMPLE #2
+	.EXAMPLE #2
             .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact                 	# On Prem
         	
 	.EXAMPLE #3
