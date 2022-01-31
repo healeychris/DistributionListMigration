@@ -21,11 +21,12 @@
     Once the contents of the new group are validated, the on-premises group can be deleted.
     .NOTES
 
-    Run Order - In 365 to create duplicate group of synced group
-    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder
+RUN ORDER - :
+    	.EXAMPLE #1
+        	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder       # In Exchange Online
 
-    Run on prem to remove the objects from sync and create contact objects. (not synced to 365)
-    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact
-
-    Run to Finalize the cloud group and cut over the original name
-    .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize
+    	.EXAMPLE #2
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact                 # On Prem
+        	
+        .EXAMPLE #3
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize                # In Exchange Online
