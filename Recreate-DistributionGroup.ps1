@@ -5,7 +5,7 @@
     Created on:   	28/01/2022
     Created by:   	Chris Healey
     Organization: 
-    Version:        0.1	
+    Version:        0.2	
     Filename:       Recreate-DistributionGroup.ps1
     Project path:   https://github.com/healeychris/DistributionListMigration
     Org Author:     Joe Palarchio (based on Version: 1.0) 
@@ -44,14 +44,16 @@
     .PARAMETER Contact
 		Create a Contact based on Group for Onpremise emailing.
 
+        RUN ORDER - :
     	.EXAMPLE #1
-        	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder
+        	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder       # In Exchange Online
 
     	.EXAMPLE #2
-        	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize
-
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact                 # On Prem
+        	
         .EXAMPLE #3
-        .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize                # In Exchange Online
+
 #>
 
 
@@ -69,12 +71,15 @@ Param(
         [switch]$Contact
 )
 
-$ContactGroupOU             =       'OU=MovedDistributionGroups,OU=Siemens SIS London,OU=Contacts,OU=Standard,OU=Business,DC=national,DC=core,DC=bbc,DC=co,DC=uk'
-$DCServer                   =       'BGB01DC1180'               # DC ServerName
-$ExportDirectory            =       ".\ExportedAddresses\"
-$FullGroupExportDirectory   =       ".\FullGroupExport\"
-$FailedGroups               =       ".\FailedGroups\"
-$DefaultManagedBy           =       "MTS-HybridAdmin"
+### Change As Needed ###########################################################################################################
+$ContactGroupOU             =       'MovedDistributionGroups'   # OU name for Contacts to be created, change as required
+$DCServer                   =       'BGBSADC1001'               # DC ServerName
+$DefaultManagedBy           =       "MTS-HybridAdmin"           # Change as required, used for default owner if not set already
+################################################################################################################################
+$ExportDirectory            =       ".\ExportedAddresses\"      # Export of group addresses
+$FullGroupExportDirectory   =       ".\FullGroupExport\"        # Export Full copy of DL for recovery if required
+$FailedGroups               =       ".\FailedGroups\"           # Log for failed groups
+
 Clear-Host
 
 
@@ -225,7 +230,7 @@ If ($CreatePlaceHolder.IsPresent) {
     Write-Host
      
 
-    If (((Get-DistributionGroup $Group -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
+    If (((Get-DistributionGroup $Group -DomainController $DCServer -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
 
         
         
@@ -278,7 +283,8 @@ If ($CreatePlaceHolder.IsPresent) {
             -PrimarySmtpAddress "Cloud-$OldPrimarySmtpAddress" -ea stop  | Out-Null
         }
         Catch {WriteTransactionsLogs -Task "Failed Creating Group: Cloud-$OldDisplayName" -Result ERROR -ErrorMessage "Failed to Create Group" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
-            Exit
+        RecordFailed    
+        Exit
         }
 
         Start-Sleep -Seconds 15
@@ -335,6 +341,7 @@ If ($CreatePlaceHolder.IsPresent) {
             -BypassSecurityGroupManagerCheck -EA Stop
         }
         Catch {WriteTransactionsLogs -Task "Failed Setting Values For: Cloud-$OldDisplayName" -Result Information -ErrorMessage "Failed to Create Group" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
+        RecordFailed
         }
 
         # Setting any Recipient Permissions
@@ -413,16 +420,11 @@ ElseIf ($Finalize.IsPresent) {
         -BypassSecurityGroupManagerCheck -EA STOP
     }
     Catch {WriteTransactionsLogs -Task "Failed Updating $Group with recorded values" -Result ERROR -ErrorMessage UpdateError -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
-        exit}
+    RecordFailed    
+    exit}
     } # Close of Group Finalize
 
 ElseIf ($Contact.IsPresent) {
-
-    
-
-    If (((Get-DistributionGroup $Group -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
-
-
 
     Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkBlue
     Write-host ""
@@ -431,11 +433,15 @@ ElseIf ($Contact.IsPresent) {
     Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkBlue
     Write-Host
      
+    
+
+    If (((Get-DistributionGroup $Group -DomainController $DCServer -ErrorAction 'SilentlyContinue').IsValid) -eq $true) {
+
 
     # Collect group info
     Try {
         WriteTransactionsLogs -Task "Found Distribution $Group" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
-        $GroupData = Get-DistributionGroup $group -EA STOP
+        $GroupData = Get-DistributionGroup -DomainController $DCServer $group -EA STOP
 
         #Export Data
         $GroupData | Export-Clixml "$FullGroupExportDirectory\$group.xml"
@@ -448,7 +454,8 @@ ElseIf ($Contact.IsPresent) {
         $GroupEmailAddresses        = $groupdata.EmailAddresses
         WriteTransactionsLogs -Task "Collected Distribution Group details for $Group" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false}
     Catch {WriteTransactionsLogs -Task "Failed Collecting Distribution Group details for $Group" -Result ERROR -ErrorMessage "Failed Getting DL Details" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
-        exit
+    RecordFailed    
+    exit
     }
 
 
@@ -469,7 +476,8 @@ ElseIf ($Contact.IsPresent) {
     $TargetOnMicrosoft = ($GroupEmailAddresses | Where-Object {$_ -clike "smtp:*mail.onmicrosoft.com"}) | Select-Object -ExpandProperty smtpAddress
     If ($TargetOnMicrosoft){WriteTransactionsLogs -Task "Found Onmicrosoft Address for $Group : $TargetOnMicrosoft" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false}
     If (!($TargetOnMicrosoft)){WriteTransactionsLogs -Task "No Onmicrosoft Address for $Group - Script will exist" -Result ERROR -ErrorMessage "No Onmicrosoft Address Found" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
-        Exit
+    RecordFailed    
+    Exit
     }
             
 
@@ -487,20 +495,26 @@ ElseIf ($Contact.IsPresent) {
         WriteTransactionsLogs -Task "Set DistributionGroup details to Old / Not Synced" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
     }
     Catch {WriteTransactionsLogs -Task "Failed to Set DistributionGroup details to Old / Not Synced" -Result ERROR -ErrorMessage "Failed to Set DL details to old" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
-        Exit
+    RecordFailed    
+    Exit
     }
 
     try {
+        # Apply undocumented marker to exclude from ADConnect Sync
+        Set-ADObject -Identity $groupData.DistinguishedName -add @{AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
+
         Set-DistributionGroup `
         -Name $NewName `
         -Identity $groupData.DistinguishedName `
         -EmailAddresses @{Remove=$TargetOnMicrosoft,$CurrentSMTP} `
         -BypassSecurityGroupManagerCheck `
         -DomainController $DCServer -EA STOP
-        Set-ADObject -Identity $groupData.DistinguishedName -add @{AdminDescription="Group_NoSync"} -Server $DCServer -EA STOP
-        WriteTransactionsLogs -Task "Removed Addresses: $TargetOnMicrosoft,$CurrentSMTP" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
+        
+        WriteTransactionsLogs -Task "Removed Addresses : $TargetOnMicrosoft,$CurrentSMTP" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
     }
-    Catch {WriteTransactionsLogs -Task "Failed Removing Addresses: $TargetOnMicrosoft,$CurrentSMTP from $Group" -Result ERROR -ErrorMessage "Failed removing Addresses" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true}
+    Catch {WriteTransactionsLogs -Task "Failed Removing Addresses : $TargetOnMicrosoft,$CurrentSMTP from $Group" -Result ERROR -ErrorMessage "Failed removing Addresses " -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError true
+    RecordFailed
+    }
 
     # Sleep for a little
     WriteTransactionsLogs -Task "Sleeping for a little as AD is old" -Result Information -ErrorMessage none -ShowScreenMessage true -ScreenMessageColour GREEN -IncludeSysError false
@@ -512,7 +526,8 @@ ElseIf ($Contact.IsPresent) {
         $NewContact = New-MailContact -Name  $CurrentName -OrganizationalUnit $ContactGroupOU -DisplayName  $CurrentDisplayname -PrimarySmtpAddress $CurrentSMTP -ExternalEmailAddress $TargetOnMicrosoft -Alias $CurrentAlias -DomainController $DCServer -EA STOP
         }
     Catch {writeTransactionsLogs -Task "Failed to create mail contact object" -Result Information -ErrorMessage "Failed creating contact" -ShowScreenMessage true -ScreenMessageColour RED -IncludeSysError false
-        Exit
+    RecordFailed    
+    Exit
     }
 
     Try {
