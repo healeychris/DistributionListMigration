@@ -40,7 +40,7 @@
 	.PARAMETER Finalize
 		Convert placeholder group to final group.
 
-    .PARAMETER Contact
+	.PARAMETER Contact
 		Create a Contact based on Group for Onpremise emailing.
 
         RUN ORDER - :
@@ -48,9 +48,9 @@
         	.\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -CreatePlaceHolder       # In Exchange Online
 
     	.EXAMPLE #2
-            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact                 # On Prem
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Contact                 	# On Prem
         	
         .EXAMPLE #3
-            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize                # In Exchange Online
+            .\Recreate-DistributionGroup.ps1 -Group "DL-Marketing" -Finalize                	# In Exchange Online
 
 #>
